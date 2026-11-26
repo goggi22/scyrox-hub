@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Выбор HID-устройства</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111216;
+      --card: #191b22;
+      --card-hover: #21242e;
+      --border: #2a2d3a;
+      --accent: #e5ff00;
+      --accent-dim: rgba(229, 255, 0, 0.12);
+      --text: #f3f4f6;
+      --muted: #8b90a0;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 18px;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .header {
+      margin-bottom: 14px;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      letter-spacing: -0.01em;
+    }
+    .subtitle {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 2px;
+    }
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      gap: 10px;
+    }
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .device {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .device:hover {
+      background: var(--card-hover);
+      border-color: #3f4458;
+    }
+    .device.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .device-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .device-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .device-meta {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: Consolas, 'Cascadia Mono', monospace;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(229, 255, 0, 0.14);
+      color: var(--accent);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .footer {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--card);
+      color: var(--text);
+      transition: opacity 0.15s ease, background 0.15s ease;
+    }
+    button:hover {
+      background: var(--card-hover);
+    }
+    button.primary {
+      background: var(--accent);
+      color: #0e0e11;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    button.primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">Подключение устройства Scyrox</h1>
+    <p class="subtitle">Выбери мышь или 8K-приёмник для доступа по WebHID</p>
+  </div>
+
+  <div id="list" class="list"></div>
+
+  <div class="footer">
+    <button id="cancelBtn" type="button">Отмена</button>
+    <button id="connectBtn" class="primary" type="button" disabled>Подключить</button>
+  </div>
+
+  <script>
+    const listEl = document.getElementById('list');
+    const connectBtn = document.getElementById('connectBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let selectedId = null;
+    let currentDevices = [];
+
+    function hex4(num) {
+      return '0x' + Number(num || 0).toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function render(devices) {
+      currentDevices = devices || [];
+      if (!currentDevices.some(d => d.deviceId === selectedId)) {
+        selectedId = currentDevices.length === 1 ? currentDevices[0].deviceId : null;
+      }
+
+      listEl.innerHTML = '';
+
+      if (currentDevices.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.innerHTML = '<div class="spinner"></div><div>Подключённые совместимые устройства не найдены.<br>Воткни USB-кабель мыши или 8K-донгл.</div>';
+        listEl.appendChild(empty);
+        connectBtn.disabled = true;
+        return;
+      }
+
+      for (const dev of currentDevices) {
+        const item = document.createElement('div');
+        item.className = 'device' + (dev.deviceId === selectedId ? ' selected' : '');
+
+        const info = document.createElement('div');
+        info.className = 'device-info';
+
+        const name = document.createElement('div');
+        name.className = 'device-name';
+        name.textContent = dev.name || 'HID Device';
+
+        const meta = document.createElement('div');
+        meta.className = 'device-meta';
+        meta.textContent = `VID ${hex4(dev.vendorId)} · PID ${hex4(dev.productId)}` + (dev.serialNumber ? ` · SN ${dev.serialNumber}` : '');
+
+        info.appendChild(name);
+        info.appendChild(meta);
+        item.appendChild(info);
+
+        if (dev.isConfigInterface) {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = 'Config HID';
+          item.appendChild(badge);
+        }
+
+        item.addEventListener('click', () => {
+          selectedId = dev.deviceId;
+          render(currentDevices);
+        });
+
+        item.addEventListener('dblclick', () => {
+          window.hidPicker.selectDevice(dev.deviceId);
+        });
+
+        listEl.appendChild(item);
+      }
+
+      connectBtn.disabled = !selectedId;
+    }
+
+    connectBtn.addEventListener('click', () => {
+      if (selectedId) window.hidPicker.selectDevice(selectedId);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      window.hidPicker.cancel();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.hidPicker.cancel();
+      if (e.key === 'Enter' && selectedId) window.hidPicker.selectDevice(selectedId);
+    });
+
+    window.hidPicker.onDevicesUpdate(render);
+    window.hidPicker.ready();
+  </script>
+</body>
+</html>

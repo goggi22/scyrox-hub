@@ -1,0 +1,18 @@
+{
+  "name": "scyrox-hub",
+  "version": "1.0.0",
+  "description": "Standalone desktop wrapper for Scyrox Control HUB WEB with WebHID support",
+  "main": "main.js",
+  "scripts": {
+    "prestart": "node scripts/ensure-icon.js",
+    "start": "electron .",
+    "prebuild": "node scripts/ensure-icon.js",
+    "build": "node scripts/build.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@electron/packager": "^19.1.0",
+    "electron": "^45.5.0"
+  }
+}
