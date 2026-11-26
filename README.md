@@ -4,6 +4,14 @@ Standalone Electron-обёртка для веб-конфигуратора мы
 
 Сделано, чтобы не переключаться на Edge/Chrome для настройки мыши, если основной браузер (например, Zen / Firefox) не поддерживает WebHID.
 
+## Скачать
+
+Готовый портативный билд для Windows x64:
+- **[Скачать Scyrox-Hub-v1.0.0-win32-x64.zip (151 MB)](https://github.com/goggi22/scyrox-hub/releases/download/v1.0.0/Scyrox-Hub-v1.0.0-win32-x64.zip)**
+- Все релизы: [Releases](https://github.com/goggi22/scyrox-hub/releases)
+
+Распаковать в любую папку и запускать `Scyrox Hub.exe`. Установка не требуется.
+
 ## Возможности
 
 - **Автовыбор конфиг-интерфейса:** автоматически находит vendor-defined HID-коллекцию (`usagePage: 0xff02`, `reportId: 8`), которую ожидает Scyrox S-Center, и подключает мышь/8K-донгл без лишних диалогов.
@@ -18,7 +26,7 @@ Standalone Electron-обёртка для веб-конфигуратора мы
 - Node.js 20+
 - Electron 45+
 
-## Запуск и сборка
+## Запуск и сборка из исходников
 
 ```bash
 npm install
